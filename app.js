@@ -1,6 +1,7 @@
 // Infrastructure Decision Tool
 // INFO 300 - Node.js assignment
 // Part A: Subnet Host Checker
+// Part B: Compute Environment Selector
 
 const readlineSync = require('readline-sync');
 
@@ -108,6 +109,43 @@ function subnetHostChecker() {
   }
 }
 
+// ---------- Part B: Compute Environment Selector ----------
+
+function computeEnvironmentSelector() {
+  console.log('\n--- Compute Environment Selector ---');
+
+  const appName = getText('Enter the application name');
+  const users = getWholeNumber('Enter the number of monthly users', true);
+  const budget = getBudget('Enter the monthly budget');
+  const highAvailability = getYesNo('Is high availability required?');
+
+  // Pick the architecture.
+  // Auto Scaling wins if users are over 10,000 OR high availability is required.
+  let architecture;
+  if (users > 10000 || highAvailability) {
+    architecture = 'EC2 + Load Balancer + Auto Scaling';
+  } else if (users >= 1000) {
+    architecture = 'EC2 + Load Balancer';
+  } else {
+    architecture = 'Single EC2';
+  }
+
+  console.log('\n--- Recommendation for ' + appName + ' ---');
+  console.log('Monthly users: ' + users);
+  console.log('Monthly budget: $' + budget.toFixed(2));
+  console.log('High availability: ' + (highAvailability ? 'Yes' : 'No'));
+  console.log('Recommended architecture: ' + architecture);
+
+  // Budget warnings
+  if (budget < 1000 && architecture !== 'Single EC2') {
+    console.log('WARNING: Your budget is under $1,000, but the recommended architecture ' +
+      'requires more than a single EC2 instance.');
+  } else if (budget >= 1000 && budget <= 3000 && architecture.includes('Auto Scaling')) {
+    console.log('WARNING: Your budget is between $1,000 and $3,000, but the recommended ' +
+      'architecture requires Auto Scaling.');
+  }
+}
+
 // ---------- Main menu ----------
 
 function main() {
@@ -117,13 +155,16 @@ function main() {
   while (keepGoing) {
     console.log('\nWhich tool would you like to use?');
     console.log('1. Subnet Host Checker');
+    console.log('2. Compute Environment Selector');
 
-    const choice = readlineSync.question('Enter 1: ').trim();
+    const choice = readlineSync.question('Enter 1 or 2: ').trim();
 
     if (choice === '1') {
       subnetHostChecker();
+    } else if (choice === '2') {
+      computeEnvironmentSelector();
     } else {
-      console.log('Invalid choice. Please enter 1.');
+      console.log('Invalid choice. Please enter 1 or 2.');
       continue;
     }
 
